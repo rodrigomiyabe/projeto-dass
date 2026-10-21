@@ -1,0 +1,84 @@
+<section class="funcionario-list">
+  <header class="funcionario-list__cabecalho">
+    <h2>Funcionários</h2>
+    <button type="button" (click)="novo()">Novo funcionário</button>
+  </header>
+
+  <form class="funcionario-list__filtro" [formGroup]="filtro" (ngSubmit)="pesquisar()">
+    <div class="funcionario-list__campo">
+      <label for="filtro-cpf">CPF</label>
+      <input id="filtro-cpf" type="text" formControlName="cpf" placeholder="000.000.000-00" />
+    </div>
+
+    <div class="funcionario-list__campo">
+      <label for="filtro-nome">Nome</label>
+      <input id="filtro-nome" type="text" formControlName="nome" />
+    </div>
+
+    <div class="funcionario-list__campo">
+      <label for="filtro-email">E-mail</label>
+      <input id="filtro-email" type="email" formControlName="email" />
+    </div>
+
+    <div class="funcionario-list__campo">
+      <label for="filtro-tamanhoCamiseta">Tamanho da camiseta</label>
+      <select id="filtro-tamanhoCamiseta" formControlName="tamanhoCamiseta">
+        <option value="">Todos</option>
+        @for (tamanho of tamanhosCamiseta; track tamanho) {
+          <option [value]="tamanho">{{ tamanho }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="funcionario-list__campo">
+      <label for="filtro-tamanhoCalcado">Tamanho do calçado</label>
+      <input id="filtro-tamanhoCalcado" type="number" formControlName="tamanhoCalcado" min="34" max="48" />
+    </div>
+
+    <div class="funcionario-list__acoes-filtro">
+      <button type="submit">Pesquisar</button>
+    </div>
+  </form>
+
+  @if (carregando()) {
+    <p class="funcionario-list__estado" role="status">Carregando...</p>
+  }
+
+  @if (erro()) {
+    <p class="funcionario-list__estado funcionario-list__estado--erro" role="alert">{{ erro() }}</p>
+  }
+
+  @if (listaVazia()) {
+    <p class="funcionario-list__estado">Nenhum funcionário encontrado.</p>
+  }
+
+  @if (!carregando() && !erro() && funcionarios().length > 0) {
+    <table class="funcionario-list__tabela">
+      <thead>
+        <tr>
+          <th>CPF</th>
+          <th>Nome</th>
+          <th>E-mail</th>
+          <th>Camiseta</th>
+          <th>Calçado</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (funcionario of funcionarios(); track funcionario.id) {
+          <tr>
+            <td data-rotulo="CPF">{{ funcionario.cpf }}</td>
+            <td data-rotulo="Nome">{{ funcionario.nome }}</td>
+            <td data-rotulo="E-mail">{{ funcionario.email }}</td>
+            <td data-rotulo="Camiseta">{{ funcionario.tamanhoCamiseta }}</td>
+            <td data-rotulo="Calçado">{{ funcionario.tamanhoCalcado }}</td>
+            <td data-rotulo="Ações" class="funcionario-list__acoes-linha">
+              <button type="button" (click)="editar(funcionario)">Editar</button>
+              <button type="button" (click)="excluir(funcionario.id)">Excluir</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
