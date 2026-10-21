@@ -38,10 +38,16 @@ This will compile your project and store the build artifacts in the `dist/` dire
 
 ## Running unit tests
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Unit tests run with [Jest](https://jestjs.io/) via [jest-preset-angular](https://github.com/thymikee/jest-preset-angular). To execute them, use the following command:
 
 ```bash
-ng test
+npm test
+```
+
+When no spec files exist yet, Jest exits with an error by default. To exit successfully in that case, run:
+
+```bash
+npm test -- --passWithNoTests
 ```
 
 ## Running end-to-end tests
