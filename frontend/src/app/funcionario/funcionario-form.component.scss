@@ -1,0 +1,44 @@
+.funcionario-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 480px;
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__erro {
+    color: #b00020;
+    font-size: 0.85rem;
+  }
+
+  &__erro-geral {
+    color: #b00020;
+    font-weight: 600;
+  }
+
+  &__acoes {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  label {
+    font-weight: 600;
+  }
+
+  input,
+  select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+}
