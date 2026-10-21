@@ -1,1 +1,18 @@
 .superpowers/
+
+# Variáveis de ambiente locais (credenciais reais)
+.env
+
+# Build / dependências
+**/target/
+**/dist/
+**/node_modules/
+**/.angular/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
