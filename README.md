@@ -41,36 +41,15 @@ com uma stack diferente:
 | Frontend   | Vue.js        | **Angular 22 (standalone components, zoneless)**   |
 | Banco      | (não especificado) | **PostgreSQL 16**                            |
 
-Essa divergência foi uma decisão deliberada e registrada, não um desvio de
-escopo — o solicitante pediu explicitamente Java/Spring Boot no lugar de
-Node.js e Angular no lugar de Vue.js.
+Decisão deliberada do solicitante, não um desvio de escopo. Mais detalhes
+técnicos em `docs/ARQUITETURA.md`.
 
-Detalhes da stack:
-
-- **Backend**: Java 21 como alvo de bytecode (`java.version` no `pom.xml`),
-  Spring Boot `4.1.1` (a versão "latest stable" oferecida pelo Spring
-  Initializr no momento em que o projeto foi gerado — mais nova do que se
-  costuma esperar em tutoriais). Build via **Maven Wrapper** (`./mvnw` /
-  `mvnw.cmd`), então **não é necessário ter o Maven instalado globalmente**.
-  Persistência com Spring Data JPA, apenas **PostgreSQL** (nenhum banco em
-  memória em produção), esquema controlado por **migrations Flyway**
-  (`backend/src/main/resources/db/migration`), com
-  `spring.jpa.hibernate.ddl-auto: validate` — ou seja, o Hibernate nunca
-  altera o esquema; ele só valida que as entidades batem com o que o Flyway
-  criou.
-- **Frontend**: Angular `22.2.3`, com **componentes standalone** e
-  **zoneless** (sem `zone.js`) — também mais novo do que normalmente se vê
-  em tutoriais. Instalado e executado via `npx @angular/cli`, então
-  **não é necessário ter a Angular CLI instalada globalmente**. Testes
-  unitários com **Jest** (não Karma/Jasmine), para não depender de um
-  Chrome real na máquina/CI.
-- **Banco de dados**: **PostgreSQL** via Docker Compose
-  (`docker-compose.yml` na raiz, imagem `postgres:16-alpine`), com
-  credenciais lidas de um arquivo `.env` local (nenhum segredo real é
-  versionado — veja `.env.example`).
-- **Testes de integração do backend**: rodam contra um PostgreSQL real e
-  descartável, levantado via **Testcontainers**, em vez de um banco falso
-  em memória — ver `docs/ARQUITETURA.md` para a justificativa.
+- **Backend**: Java 21, Spring Boot `4.1.1`, Maven Wrapper (não precisa de
+  Maven instalado), PostgreSQL via Spring Data JPA + migrations Flyway.
+- **Frontend**: Angular `22.2.3` (standalone, zoneless), via `npx` (não
+  precisa de Angular CLI instalada), testes com Jest.
+- **Banco de dados**: PostgreSQL via Docker Compose, credenciais em `.env`
+  local (veja `.env.example`).
 
 ## Pré-requisitos
 
@@ -258,34 +237,12 @@ cd frontend && npm run build          # gera os estáticos em frontend/dist/fron
 
 ## Limitações conhecidas
 
-- **Checagem de duplicidade de CPF/e-mail com corrida teórica (TOCTOU)**:
-  `criar`/`atualizar` primeiro verificam se o CPF/e-mail já existe
-  (`existsByCpf`/`existsByEmail`) e só então salvam. Sob requisições
-  concorrentes para o mesmo CPF/e-mail, as duas podem passar pela checagem
-  antes que qualquer uma tenha salvo. Isso ainda não é impedido a nível de
-  aplicação, mas não é mais um erro genérico de 500: a constraint `UNIQUE`
-  do banco é o último degrau de defesa, e o `GlobalExceptionHandler`
-  traduz a violação de integridade (`DataIntegrityViolationException`)
-  para um `409` com a mensagem genérica "CPF ou e-mail já cadastrado" —
-  sem expor o detalhe bruto do Postgres (que pode conter o CPF). A janela
-  de corrida em si (ambas as requisições passarem pela checagem antes de
-  qualquer salvar) continua existindo, mas o cliente sempre recebe um `409`
-  limpo em vez de um `500`.
-- **Paginação simples**: usa `Pageable` do Spring Data com um valor padrão
-  explícito (`@PageableDefault(size = 50, sort = "nome")`, ordenação
-  estável por nome quando `sort` não é informado). O frontend exibe um
-  aviso "mostrando X de Y" e controles mínimos de avançar/voltar página
-  (sem seletor de página nem salto direto para uma página arbitrária).
-- **Sem autenticação/autorização**: qualquer pessoa com acesso à rede onde
-  a API está exposta pode ler, criar, editar e excluir qualquer
-  funcionário. Adequado para o escopo deste desafio (ambiente interno/
-  demonstração), não para uso em produção exposta à internet sem uma camada
-  de autenticação adicional.
-- **Nenhum deploy em nuvem foi realizado**: não há link de demonstração
-  publicamente acessível. O PDF do desafio marca o deploy em nuvem como
-  opcional; a aplicação foi validada localmente tanto via Docker Compose
-  completo (Opção A) quanto via `./mvnw spring-boot:run` + `npm start`
-  (Opção B).
+- **Duplicidade de CPF/e-mail**: há uma pequena janela de corrida sob
+  requisições concorrentes, mas o banco garante que nunca duplica (retorna
+  `409`, nunca salva dois iguais).
+- **Paginação simples**: avançar/voltar página, sem seletor de página.
+- **Sem autenticação/autorização**: escopo deste desafio não pede login.
+- **Sem deploy em nuvem**: demonstração opcional no PDF, não foi feita.
 
 ## Estrutura do repositório
 
