@@ -1,12 +1,21 @@
-@if (feedbackService.mensagem(); as mensagem) {
-  <div
-    class="app-toast"
-    [class.app-toast--sucesso]="mensagem.tipo === 'sucesso'"
-    [class.app-toast--erro]="mensagem.tipo === 'erro'"
-    role="status"
-  >
-    {{ mensagem.texto }}
-  </div>
-}
+<div class="app-shell">
+  <header class="app-shell__topbar">
+    <span class="app-shell__brand">🎁 Gerenciador de Brindes</span>
+    <span class="app-shell__orgao">Grupo Dass</span>
+  </header>
 
-<router-outlet />
+  @if (feedbackService.mensagem(); as mensagem) {
+    <div
+      class="app-toast"
+      [class.app-toast--sucesso]="mensagem.tipo === 'sucesso'"
+      [class.app-toast--erro]="mensagem.tipo === 'erro'"
+      role="status"
+    >
+      {{ mensagem.texto }}
+    </div>
+  }
+
+  <main class="app-shell__conteudo">
+    <router-outlet />
+  </main>
+</div>

@@ -1,85 +1,87 @@
-<form class="funcionario-form" [formGroup]="form" (ngSubmit)="salvar()">
-  <h2>{{ funcionario ? 'Editar funcionário' : 'Novo funcionário' }}</h2>
+<form class="funcionario-form cartao" [formGroup]="form" (ngSubmit)="salvar()">
+  <h2 class="funcionario-form__titulo">{{ funcionario ? 'Editar funcionário' : 'Novo funcionário' }}</h2>
 
   @if (erro()) {
     <p class="funcionario-form__erro-geral" role="alert">{{ erro() }}</p>
   }
 
-  <div class="funcionario-form__campo">
-    <label for="cpf">CPF</label>
-    <input id="cpf" type="text" formControlName="cpf" placeholder="000.000.000-00" />
-    @if (form.controls['cpf'].invalid && form.controls['cpf'].touched) {
-      <small class="funcionario-form__erro">
-        @if (form.controls['cpf'].errors?.['required']) {
-          CPF é obrigatório.
-        } @else if (form.controls['cpf'].errors?.['cpfInvalido']) {
-          CPF inválido.
-        }
-      </small>
-    }
-  </div>
-
-  <div class="funcionario-form__campo">
-    <label for="nome">Nome</label>
-    <input id="nome" type="text" formControlName="nome" />
-    @if (form.controls['nome'].invalid && form.controls['nome'].touched) {
-      <small class="funcionario-form__erro">
-        @if (form.controls['nome'].errors?.['required'] || form.controls['nome'].errors?.['pattern']) {
-          Nome é obrigatório.
-        } @else if (form.controls['nome'].errors?.['minlength']) {
-          Nome deve ter no mínimo 2 caracteres.
-        } @else if (form.controls['nome'].errors?.['maxlength']) {
-          Nome deve ter no máximo 150 caracteres.
-        }
-      </small>
-    }
-  </div>
-
-  <div class="funcionario-form__campo">
-    <label for="email">E-mail</label>
-    <input id="email" type="email" formControlName="email" />
-    @if (form.controls['email'].invalid && form.controls['email'].touched) {
-      <small class="funcionario-form__erro">
-        @if (form.controls['email'].errors?.['required'] || form.controls['email'].errors?.['pattern']) {
-          E-mail é obrigatório.
-        } @else if (form.controls['email'].errors?.['email']) {
-          E-mail inválido.
-        } @else if (form.controls['email'].errors?.['maxlength']) {
-          E-mail deve ter no máximo 150 caracteres.
-        }
-      </small>
-    }
-  </div>
-
-  <div class="funcionario-form__campo">
-    <label for="tamanhoCamiseta">Tamanho da camiseta</label>
-    <select id="tamanhoCamiseta" formControlName="tamanhoCamiseta">
-      <option value="" disabled>Selecione</option>
-      @for (tamanho of tamanhosCamiseta; track tamanho) {
-        <option [value]="tamanho">{{ tamanho }}</option>
+  <div class="funcionario-form__grade">
+    <div class="funcionario-form__campo">
+      <label for="cpf">CPF</label>
+      <input id="cpf" type="text" formControlName="cpf" placeholder="000.000.000-00" />
+      @if (form.controls['cpf'].invalid && form.controls['cpf'].touched) {
+        <small class="funcionario-form__erro">
+          @if (form.controls['cpf'].errors?.['required']) {
+            CPF é obrigatório.
+          } @else if (form.controls['cpf'].errors?.['cpfInvalido']) {
+            CPF inválido.
+          }
+        </small>
       }
-    </select>
-    @if (form.controls['tamanhoCamiseta'].invalid && form.controls['tamanhoCamiseta'].touched) {
-      <small class="funcionario-form__erro">Tamanho da camiseta é obrigatório.</small>
-    }
-  </div>
+    </div>
 
-  <div class="funcionario-form__campo">
-    <label for="tamanhoCalcado">Tamanho do calçado</label>
-    <input id="tamanhoCalcado" type="number" formControlName="tamanhoCalcado" min="34" max="48" />
-    @if (form.controls['tamanhoCalcado'].invalid && form.controls['tamanhoCalcado'].touched) {
-      <small class="funcionario-form__erro">
-        @if (form.controls['tamanhoCalcado'].errors?.['required']) {
-          Tamanho do calçado é obrigatório.
-        } @else if (form.controls['tamanhoCalcado'].errors?.['min'] || form.controls['tamanhoCalcado'].errors?.['max']) {
-          Tamanho do calçado deve estar entre 34 e 48.
+    <div class="funcionario-form__campo">
+      <label for="nome">Nome</label>
+      <input id="nome" type="text" formControlName="nome" />
+      @if (form.controls['nome'].invalid && form.controls['nome'].touched) {
+        <small class="funcionario-form__erro">
+          @if (form.controls['nome'].errors?.['required'] || form.controls['nome'].errors?.['pattern']) {
+            Nome é obrigatório.
+          } @else if (form.controls['nome'].errors?.['minlength']) {
+            Nome deve ter no mínimo 2 caracteres.
+          } @else if (form.controls['nome'].errors?.['maxlength']) {
+            Nome deve ter no máximo 150 caracteres.
+          }
+        </small>
+      }
+    </div>
+
+    <div class="funcionario-form__campo funcionario-form__campo--larga">
+      <label for="email">E-mail</label>
+      <input id="email" type="email" formControlName="email" />
+      @if (form.controls['email'].invalid && form.controls['email'].touched) {
+        <small class="funcionario-form__erro">
+          @if (form.controls['email'].errors?.['required'] || form.controls['email'].errors?.['pattern']) {
+            E-mail é obrigatório.
+          } @else if (form.controls['email'].errors?.['email']) {
+            E-mail inválido.
+          } @else if (form.controls['email'].errors?.['maxlength']) {
+            E-mail deve ter no máximo 150 caracteres.
+          }
+        </small>
+      }
+    </div>
+
+    <div class="funcionario-form__campo">
+      <label for="tamanhoCamiseta">Tamanho da camiseta</label>
+      <select id="tamanhoCamiseta" formControlName="tamanhoCamiseta">
+        <option value="" disabled>Selecione</option>
+        @for (tamanho of tamanhosCamiseta; track tamanho) {
+          <option [value]="tamanho">{{ tamanho }}</option>
         }
-      </small>
-    }
+      </select>
+      @if (form.controls['tamanhoCamiseta'].invalid && form.controls['tamanhoCamiseta'].touched) {
+        <small class="funcionario-form__erro">Tamanho da camiseta é obrigatório.</small>
+      }
+    </div>
+
+    <div class="funcionario-form__campo">
+      <label for="tamanhoCalcado">Tamanho do calçado (numeração BR)</label>
+      <input id="tamanhoCalcado" type="number" formControlName="tamanhoCalcado" min="34" max="48" />
+      @if (form.controls['tamanhoCalcado'].invalid && form.controls['tamanhoCalcado'].touched) {
+        <small class="funcionario-form__erro">
+          @if (form.controls['tamanhoCalcado'].errors?.['required']) {
+            Tamanho do calçado é obrigatório.
+          } @else if (form.controls['tamanhoCalcado'].errors?.['min'] || form.controls['tamanhoCalcado'].errors?.['max']) {
+            Tamanho do calçado deve estar entre 34 e 48.
+          }
+        </small>
+      }
+    </div>
   </div>
 
   <div class="funcionario-form__acoes">
-    <button type="submit">Salvar</button>
-    <button type="button" (click)="cancelar()">Cancelar</button>
+    <button type="submit" class="botao botao--primario">Salvar</button>
+    <button type="button" class="botao botao--ghost" (click)="cancelar()">Cancelar</button>
   </div>
 </form>
