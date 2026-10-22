@@ -137,22 +137,9 @@ sobrevivem a reinícios do container.
 
 ### 3. Rodar as migrations
 
-As migrations Flyway (em `backend/src/main/resources/db/migration`) são
-aplicadas **automaticamente** quando o backend inicia (`spring.flyway.enabled:
-true` em `application.yml`). Não é necessário nenhum passo manual no fluxo
-normal.
-
-Caso queira aplicar as migrations sem subir a aplicação inteira (por
-exemplo, para inspecionar o banco antes de rodar o backend):
-
-```bash
-cd backend
-./mvnw flyway:migrate \
-  -Dflyway.url=jdbc:postgresql://localhost:5432/dass_brindes \
-  -Dflyway.user=dass_brindes \
-  -Dflyway.password=troque_esta_senha
-```
-(ajuste host/porta/usuário/senha/banco conforme o seu `.env`.)
+As migrations Flyway são aplicadas **automaticamente** quando o backend
+inicia — nenhum passo manual é necessário. Se quiser aplicá-las sem subir a
+aplicação inteira: `cd backend && ./mvnw flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:5432/dass_brindes -Dflyway.user=dass_brindes -Dflyway.password=troque_esta_senha` (ajuste conforme o seu `.env`).
 
 ### 4. Iniciar o backend
 
@@ -227,85 +214,47 @@ aplicação real (backend + frontend + Postgres rodando). Ele é tratado como
 **opcional e best-effort**: não faz parte do pipeline principal de testes,
 mas pode ser executado manualmente.
 
-Para rodar (todos os três serviços precisam estar de pé):
+Para rodar: suba banco, backend e frontend como na Opção A ou na Opção B
+acima (qualquer uma serve, desde que os três estejam respondendo), depois:
 
 ```bash
-# 1. Banco
-docker compose up -d postgres
-
-# 2. Backend (em um terminal, com as variáveis de ambiente exportadas)
-cd backend
-export POSTGRES_HOST=localhost POSTGRES_PORT=5432 POSTGRES_DB=dass_brindes POSTGRES_USER=dass_brindes POSTGRES_PASSWORD=troque_esta_senha
-./mvnw spring-boot:run
-
-# 3. Frontend (em outro terminal)
-cd frontend
-npm start
-
-# 4. E2E (em outro terminal, depois que backend e frontend estiverem respondendo)
 cd e2e
-npm install          # apenas na primeira vez
-npx playwright install chromium   # apenas na primeira vez
+npm install                      # apenas na primeira vez
+npx playwright install chromium  # apenas na primeira vez
 npx playwright test
 ```
 
-O resultado real da última execução (Task 14) está documentado em
+O resultado real da última execução está documentado em
 `docs/PLANO-DE-TESTES.md`.
 
 ## Build de produção
 
-### Backend
+Builds manuais, sem Docker (a Opção A já builda as imagens de produção
+automaticamente):
 
 ```bash
-cd backend
-./mvnw clean package
+cd backend && ./mvnw clean package   # gera o JAR executável em backend/target/
+cd frontend && npm run build          # gera os estáticos em frontend/dist/frontend/
 ```
-
-Gera o JAR executável em `backend/target/`. (`./mvnw clean verify`, usado
-para rodar os testes, também gera o mesmo artefato — `package` é um atalho
-quando você só quer o JAR, sem rodar os testes de integração.)
-
-### Frontend
-
-```bash
-cd frontend
-npm run build
-```
-
-Gera os arquivos estáticos otimizados em `frontend/dist/frontend/`.
 
 ## Troubleshooting
 
-- **Rodou a Opção A e agora quer tentar a Opção B (ou vice-versa)**: pare os
-  containers primeiro (`docker compose down`) — os serviços `backend`/
-  `frontend` do Docker usam as mesmas portas (8080/4200) que os processos
-  locais, então rodar os dois ao mesmo tempo dá conflito de porta.
-- **Porta 5432 já em uso** (outro Postgres local rodando): mude
-  `POSTGRES_PORT` no `.env` para outra porta (ex.: `5433`) antes de
-  `docker compose up -d postgres`, e ajuste `POSTGRES_HOST`/porta usados
-  pelo backend na mesma proporção.
-- **Porta 8080 já em uso**: pare o processo que a está usando, ou mude
-  `server.port` em `backend/src/main/resources/application.yml` (e a porta
-  publicada do serviço `backend` no `docker-compose.yml`, se usar a Opção A).
-- **Porta 4200 já em uso**: `npm start -- --port 4300` (Opção B) ou troque
-  a porta publicada do serviço `frontend` no `docker-compose.yml` (Opção A).
-- **Docker não está rodando / "Cannot connect to the Docker daemon"**:
-  abra o Docker Desktop (ou inicie o serviço Docker) antes de
-  `docker compose up -d` e antes de `./mvnw clean verify` (os testes de
-  integração via Testcontainers também precisam do Docker disponível).
-- **`./mvnw clean verify` falha tentando baixar a imagem `postgres:16-alpine`**:
-  verifique conectividade de rede/Docker Hub; os testes de integração
-  baixam essa imagem automaticamente na primeira execução.
-- **Erro de validação do Flyway ao iniciar o backend** (ex.: "Validate
-  failed"): normalmente indica que o esquema do banco está dessincronizado
-  das migrations — em ambiente de desenvolvimento, a solução mais simples é
-  derrubar o volume (`docker compose down -v`) e subir de novo
-  (`docker compose up -d postgres`, ou `up -d --build` na Opção A), perdendo
-  os dados locais.
-- **Frontend não encontra a API (erros de CORS ou "Failed to fetch")**:
-  confirme que o backend está rodando em `localhost:8080` e que o frontend
-  está em `localhost:4200` — o backend só libera CORS para essa origem
-  exata (`backend/src/main/java/com/dass/brindes/config/CorsConfig.java`).
+- **Trocando da Opção A para a B (ou vice-versa)**: rode `docker compose down`
+  antes — os dois usam as mesmas portas (8080/4200) e dão conflito se
+  rodarem juntos.
+- **Porta 5432/8080/4200 já em uso**: mude a porta em `.env`
+  (`POSTGRES_PORT`), `application.yml` (`server.port`) ou
+  `npm start -- --port 4300`, conforme o caso — e a porta publicada
+  correspondente no `docker-compose.yml` se estiver usando a Opção A.
+- **Docker não está rodando**: abra o Docker Desktop antes de
+  `docker compose up` e antes de `./mvnw clean verify` (os testes de
+  integração também precisam do Docker).
+- **Erro de validação do Flyway ao iniciar o backend**: o esquema do banco
+  está dessincronizado das migrations — derrube o volume
+  (`docker compose down -v`) e suba de novo, perdendo os dados locais.
+- **Frontend não encontra a API (erros de CORS)**: confirme que o backend
+  está em `localhost:8080` e o frontend em `localhost:4200` — o CORS só
+  libera essa origem exata (`backend/.../config/CorsConfig.java`).
 
 ## Limitações conhecidas
 
