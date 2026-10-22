@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { FuncionarioListComponent } from './funcionario-list.component';
 import { FuncionarioService } from './funcionario.service';
 import { Funcionario, PaginaFuncionarios } from './funcionario.model';
+import { ConfirmDialogService } from '../shared/confirm-dialog.service';
 import { FeedbackService } from '../shared/feedback.service';
 
 describe('FuncionarioListComponent', () => {
@@ -11,6 +12,7 @@ describe('FuncionarioListComponent', () => {
   let component: FuncionarioListComponent;
   let service: { listar: jest.Mock; excluir: jest.Mock };
   let feedback: { sucesso: jest.Mock; erro: jest.Mock };
+  let confirmDialog: { confirmar: jest.Mock };
   let router: { navigate: jest.Mock };
 
   const pagina = (content: Funcionario[]): PaginaFuncionarios => ({
@@ -24,12 +26,14 @@ describe('FuncionarioListComponent', () => {
   beforeEach(async () => {
     service = { listar: jest.fn(), excluir: jest.fn() };
     feedback = { sucesso: jest.fn(), erro: jest.fn() };
+    confirmDialog = { confirmar: jest.fn() };
     router = { navigate: jest.fn() };
     await TestBed.configureTestingModule({
       imports: [FuncionarioListComponent],
       providers: [
         { provide: FuncionarioService, useValue: service },
         { provide: FeedbackService, useValue: feedback },
+        { provide: ConfirmDialogService, useValue: confirmDialog },
         { provide: Router, useValue: router },
       ],
     }).compileComponents();
@@ -65,29 +69,31 @@ describe('FuncionarioListComponent', () => {
     expect(service.listar).toHaveBeenCalledWith(expect.objectContaining({ nome: 'Ana' }), 0);
   });
 
-  it('excluir só chama o serviço após confirmação, navega e mostra feedback de sucesso', () => {
+  it('excluir só chama o serviço após confirmação, navega e mostra feedback de sucesso', async () => {
     service.listar.mockReturnValue(
       of(pagina([{ id: 1, cpf: '12345678909', nome: 'Ana', email: 'ana@example.com', tamanhoCamiseta: 'M', tamanhoCalcado: 38 }])),
     );
     service.excluir.mockReturnValue(of(void 0));
     fixture.detectChanges();
-    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
-    component.excluir(1);
+
+    confirmDialog.confirmar.mockResolvedValue(false);
+    await component.excluir(1);
     expect(service.excluir).not.toHaveBeenCalled();
-    confirmSpy.mockReturnValue(true);
-    component.excluir(1);
+
+    confirmDialog.confirmar.mockResolvedValue(true);
+    await component.excluir(1);
     expect(service.excluir).toHaveBeenCalledWith(1);
     expect(feedback.sucesso).toHaveBeenCalled();
   });
 
-  it('excluir mostra feedback de erro quando o serviço falha', () => {
+  it('excluir mostra feedback de erro quando o serviço falha', async () => {
     service.listar.mockReturnValue(
       of(pagina([{ id: 1, cpf: '12345678909', nome: 'Ana', email: 'ana@example.com', tamanhoCamiseta: 'M', tamanhoCalcado: 38 }])),
     );
     service.excluir.mockReturnValue(throwError(() => new Error('falha')));
     fixture.detectChanges();
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
-    component.excluir(1);
+    confirmDialog.confirmar.mockResolvedValue(true);
+    await component.excluir(1);
     expect(feedback.erro).toHaveBeenCalled();
     expect(feedback.sucesso).not.toHaveBeenCalled();
   });

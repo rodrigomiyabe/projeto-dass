@@ -6,9 +6,6 @@ const NOME = 'Ana Teste E2E';
 const EMAIL = 'ana.e2e@example.com';
 
 test('cadastrar, pesquisar, editar e excluir um funcionário', async ({ page }) => {
-  // Accept the browser confirm() dialog triggered by "Excluir" automatically.
-  page.on('dialog', (dialog) => dialog.accept());
-
   // --- Cadastrar ---
   await page.goto('/');
   await page.getByRole('button', { name: 'Novo funcionário' }).click();
@@ -51,8 +48,10 @@ test('cadastrar, pesquisar, editar e excluir um funcionário', async ({ page }) 
   await expect(linhaAtualizada).toHaveCount(1);
   await expect(linhaAtualizada.locator('td[data-rotulo="Camiseta"]')).toHaveText('G');
 
-  // --- Excluir ---
+  // --- Excluir (via modal próprio da aplicação, não o confirm() nativo) ---
   await linhaAtualizada.getByRole('button', { name: 'Excluir' }).click();
+  await expect(page.getByRole('alertdialog')).toBeVisible();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Excluir' }).click();
 
   await expect(page.getByText('Funcionário excluído com sucesso.')).toBeVisible();
   await expect(page.locator('tr', { hasText: NOME })).toHaveCount(0);

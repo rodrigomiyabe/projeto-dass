@@ -12,6 +12,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { ConfirmDialogService } from '../shared/confirm-dialog.service';
 import { FeedbackService } from '../shared/feedback.service';
 import { Funcionario, FuncionarioFiltro, TamanhoCamiseta } from './funcionario.model';
 import { FuncionarioService } from './funcionario.service';
@@ -32,6 +33,7 @@ export class FuncionarioListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(FuncionarioService);
   private readonly feedbackService = inject(FeedbackService);
+  private readonly confirmDialogService = inject(ConfirmDialogService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -120,8 +122,9 @@ export class FuncionarioListComponent implements OnInit {
     }
   }
 
-  excluir(id: number): void {
-    if (!window.confirm('Confirma a exclusão deste funcionário?')) {
+  async excluir(id: number): Promise<void> {
+    const confirmado = await this.confirmDialogService.confirmar('Confirma a exclusão deste funcionário?');
+    if (!confirmado) {
       return;
     }
 

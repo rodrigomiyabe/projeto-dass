@@ -1,0 +1,17 @@
+@if (confirmDialogService.estado(); as estado) {
+  <div class="confirm-dialog-fundo" (click)="cancelar()">
+    <div
+      class="confirm-dialog cartao"
+      role="alertdialog"
+      aria-modal="true"
+      [attr.aria-label]="estado.mensagem"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="confirm-dialog__mensagem">{{ estado.mensagem }}</p>
+      <div class="confirm-dialog__acoes">
+        <button type="button" class="botao botao--ghost" (click)="cancelar()">{{ estado.textoCancelar }}</button>
+        <button type="button" class="botao botao--perigo" (click)="confirmar()">{{ estado.textoConfirmar }}</button>
+      </div>
+    </div>
+  </div>
+}
