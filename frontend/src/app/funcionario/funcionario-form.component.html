@@ -24,8 +24,10 @@
     <input id="nome" type="text" formControlName="nome" />
     @if (form.controls['nome'].invalid && form.controls['nome'].touched) {
       <small class="funcionario-form__erro">
-        @if (form.controls['nome'].errors?.['required']) {
+        @if (form.controls['nome'].errors?.['required'] || form.controls['nome'].errors?.['pattern']) {
           Nome é obrigatório.
+        } @else if (form.controls['nome'].errors?.['minlength']) {
+          Nome deve ter no mínimo 2 caracteres.
         } @else if (form.controls['nome'].errors?.['maxlength']) {
           Nome deve ter no máximo 150 caracteres.
         }
@@ -38,10 +40,12 @@
     <input id="email" type="email" formControlName="email" />
     @if (form.controls['email'].invalid && form.controls['email'].touched) {
       <small class="funcionario-form__erro">
-        @if (form.controls['email'].errors?.['required']) {
+        @if (form.controls['email'].errors?.['required'] || form.controls['email'].errors?.['pattern']) {
           E-mail é obrigatório.
         } @else if (form.controls['email'].errors?.['email']) {
           E-mail inválido.
+        } @else if (form.controls['email'].errors?.['maxlength']) {
+          E-mail deve ter no máximo 150 caracteres.
         }
       </small>
     }

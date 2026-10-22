@@ -29,9 +29,16 @@ export class FuncionarioListComponent implements OnInit {
   readonly carregando = signal(false);
   readonly erro = signal<string | null>(null);
 
+  readonly paginaAtual = signal(0);
+  readonly totalPaginas = signal(0);
+  readonly totalElementos = signal(0);
+
   readonly listaVazia = computed(
     () => !this.carregando() && this.funcionarios().length === 0 && !this.erro(),
   );
+
+  readonly temPaginaAnterior = computed(() => this.paginaAtual() > 0);
+  readonly temProximaPagina = computed(() => this.paginaAtual() + 1 < this.totalPaginas());
 
   readonly filtro = this.fb.nonNullable.group({
     cpf: [''],
@@ -45,7 +52,7 @@ export class FuncionarioListComponent implements OnInit {
     this.pesquisar();
   }
 
-  pesquisar(): void {
+  pesquisar(pagina = 0): void {
     const valores = this.filtro.getRawValue();
     const filtro: FuncionarioFiltro = {
       cpf: this.valorOuIndefinido(valores.cpf),
@@ -58,17 +65,35 @@ export class FuncionarioListComponent implements OnInit {
     this.carregando.set(true);
     this.erro.set(null);
 
-    this.service.listar(filtro).subscribe({
-      next: (pagina) => {
-        this.funcionarios.set(pagina.content);
+    this.service.listar(filtro, pagina).subscribe({
+      next: (resultado) => {
+        this.funcionarios.set(resultado.content);
+        this.paginaAtual.set(resultado.number);
+        this.totalPaginas.set(resultado.totalPages);
+        this.totalElementos.set(resultado.totalElements);
         this.carregando.set(false);
       },
       error: () => {
         this.erro.set('Não foi possível carregar os funcionários.');
         this.funcionarios.set([]);
+        this.paginaAtual.set(0);
+        this.totalPaginas.set(0);
+        this.totalElementos.set(0);
         this.carregando.set(false);
       },
     });
+  }
+
+  paginaAnterior(): void {
+    if (this.temPaginaAnterior()) {
+      this.pesquisar(this.paginaAtual() - 1);
+    }
+  }
+
+  proximaPagina(): void {
+    if (this.temProximaPagina()) {
+      this.pesquisar(this.paginaAtual() + 1);
+    }
   }
 
   excluir(id: number): void {
@@ -76,9 +101,14 @@ export class FuncionarioListComponent implements OnInit {
       return;
     }
 
-    this.service.excluir(id).subscribe(() => {
-      this.feedbackService.sucesso('Funcionário excluído com sucesso.');
-      this.pesquisar();
+    this.service.excluir(id).subscribe({
+      next: () => {
+        this.feedbackService.sucesso('Funcionário excluído com sucesso.');
+        this.pesquisar(this.paginaAtual());
+      },
+      error: () => {
+        this.feedbackService.erro('Não foi possível excluir o funcionário.');
+      },
     });
   }
 

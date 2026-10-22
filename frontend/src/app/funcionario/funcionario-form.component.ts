@@ -1,10 +1,13 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ApiError } from '../shared/api-error.model';
 import { cpfValidator, normalizarCpf } from '../shared/cpf-validator';
 import { FeedbackService } from '../shared/feedback.service';
 import { Funcionario, FuncionarioRequest, TamanhoCamiseta } from './funcionario.model';
 import { FuncionarioService } from './funcionario.service';
+
+const NAO_EM_BRANCO = Validators.pattern(/\S/);
 
 export const TAMANHOS_CAMISETA: TamanhoCamiseta[] = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
 
@@ -30,8 +33,8 @@ export class FuncionarioFormComponent implements OnInit {
 
   readonly form = this.fb.nonNullable.group({
     cpf: ['', [Validators.required, cpfValidator()]],
-    nome: ['', [Validators.required, Validators.maxLength(150)]],
-    email: ['', [Validators.required, Validators.email]],
+    nome: ['', [Validators.required, NAO_EM_BRANCO, Validators.minLength(2), Validators.maxLength(150)]],
+    email: ['', [Validators.required, NAO_EM_BRANCO, Validators.email, Validators.maxLength(150)]],
     tamanhoCamiseta: ['' as TamanhoCamiseta, [Validators.required]],
     tamanhoCalcado: [null as unknown as number, [Validators.required, Validators.min(34), Validators.max(48)]],
   });
@@ -74,8 +77,8 @@ export class FuncionarioFormComponent implements OnInit {
         this.router.navigate(['/']);
         this.salvo.emit();
       },
-      error: () => {
-        const mensagem = 'Não foi possível salvar o funcionário. Verifique os dados e tente novamente.';
+      error: (err: { error?: ApiError }) => {
+        const mensagem = this.extrairMensagemDeErro(err?.error);
         this.erro.set(mensagem);
         this.feedbackService.erro(mensagem);
       },
@@ -85,5 +88,16 @@ export class FuncionarioFormComponent implements OnInit {
   cancelar(): void {
     this.router.navigate(['/']);
     this.cancelado.emit();
+  }
+
+  private extrairMensagemDeErro(apiError: ApiError | undefined): string {
+    const padrao = 'Não foi possível salvar o funcionário. Verifique os dados e tente novamente.';
+
+    if (apiError?.fieldErrors?.length) {
+      const detalhes = apiError.fieldErrors.map((fe) => `${fe.campo}: ${fe.mensagem}`).join(' | ');
+      return `${apiError.message ?? 'Dados inválidos'} (${detalhes})`;
+    }
+
+    return apiError?.message ?? padrao;
   }
 }

@@ -9,13 +9,14 @@ export class FuncionarioService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
 
-  listar(filtro: FuncionarioFiltro): Observable<PaginaFuncionarios> {
+  listar(filtro: FuncionarioFiltro, pagina = 0): Observable<PaginaFuncionarios> {
     let params = new HttpParams();
     for (const [chave, valor] of Object.entries(filtro)) {
       if (valor !== undefined) {
         params = params.set(chave, valor);
       }
     }
+    params = params.set('page', pagina);
     return this.http.get<PaginaFuncionarios>(this.apiUrl, { params });
   }
 

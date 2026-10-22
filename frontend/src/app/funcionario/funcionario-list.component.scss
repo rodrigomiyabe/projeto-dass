@@ -51,6 +51,17 @@
     gap: 0.5rem;
   }
 
+  &__paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  &__paginacao-info {
+    font-size: 0.9rem;
+  }
+
   label {
     font-weight: 600;
   }

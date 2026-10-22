@@ -80,5 +80,14 @@
         }
       </tbody>
     </table>
+
+    <nav class="funcionario-list__paginacao" aria-label="Paginação">
+      <button type="button" (click)="paginaAnterior()" [disabled]="!temPaginaAnterior()">Anterior</button>
+      <span class="funcionario-list__paginacao-info">
+        Mostrando {{ funcionarios().length }} de {{ totalElementos() }}
+        (página {{ paginaAtual() + 1 }} de {{ totalPaginas() }})
+      </span>
+      <button type="button" (click)="proximaPagina()" [disabled]="!temProximaPagina()">Próxima</button>
+    </nav>
   }
 </section>

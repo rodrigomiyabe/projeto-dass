@@ -62,7 +62,7 @@ describe('FuncionarioListComponent', () => {
     fixture.detectChanges();
     component.filtro.controls['nome'].setValue('Ana');
     component.pesquisar();
-    expect(service.listar).toHaveBeenCalledWith(expect.objectContaining({ nome: 'Ana' }));
+    expect(service.listar).toHaveBeenCalledWith(expect.objectContaining({ nome: 'Ana' }), 0);
   });
 
   it('excluir só chama o serviço após confirmação, navega e mostra feedback de sucesso', () => {
@@ -78,6 +78,42 @@ describe('FuncionarioListComponent', () => {
     component.excluir(1);
     expect(service.excluir).toHaveBeenCalledWith(1);
     expect(feedback.sucesso).toHaveBeenCalled();
+  });
+
+  it('excluir mostra feedback de erro quando o serviço falha', () => {
+    service.listar.mockReturnValue(
+      of(pagina([{ id: 1, cpf: '12345678909', nome: 'Ana', email: 'ana@example.com', tamanhoCamiseta: 'M', tamanhoCalcado: 38 }])),
+    );
+    service.excluir.mockReturnValue(throwError(() => new Error('falha')));
+    fixture.detectChanges();
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+    component.excluir(1);
+    expect(feedback.erro).toHaveBeenCalled();
+    expect(feedback.sucesso).not.toHaveBeenCalled();
+  });
+
+  it('clicar em próxima página chama service.listar com a próxima página', () => {
+    service.listar.mockReturnValue(
+      of({
+        content: [{ id: 1, cpf: '12345678909', nome: 'Ana', email: 'ana@example.com', tamanhoCamiseta: 'M', tamanhoCalcado: 38 }],
+        totalElements: 2,
+        totalPages: 2,
+        number: 0,
+        size: 1,
+      } as PaginaFuncionarios),
+    );
+    fixture.detectChanges();
+    expect(component.temProximaPagina()).toBe(true);
+    component.proximaPagina();
+    expect(service.listar).toHaveBeenLastCalledWith(expect.anything(), 1);
+  });
+
+  it('clicar em página anterior não chama o serviço quando já está na primeira página', () => {
+    service.listar.mockReturnValue(of(pagina([])));
+    fixture.detectChanges();
+    service.listar.mockClear();
+    component.paginaAnterior();
+    expect(service.listar).not.toHaveBeenCalled();
   });
 
   it('novo navega para /novo e editar navega para /editar/:id', () => {

@@ -282,24 +282,20 @@ Gera os arquivos estáticos otimizados em `frontend/dist/frontend/`.
   `criar`/`atualizar` primeiro verificam se o CPF/e-mail já existe
   (`existsByCpf`/`existsByEmail`) e só então salvam. Sob requisições
   concorrentes para o mesmo CPF/e-mail, as duas podem passar pela checagem
-  antes que qualquer uma tenha salvo, e uma delas falharia na constraint
-  `UNIQUE` do banco com um erro genérico de banco em vez do 409 limpo. Essa
-  é uma troca deliberada: o cenário normal de uso (um usuário por vez,
-  cadastro manual via formulário) é coberto perfeitamente por um 409 com
-  mensagem clara; cobrir a corrida exigiria, por exemplo, capturar a
-  exceção de violação de constraint do driver e traduzi-la para 409, o que
-  não foi implementado.
-- **Parâmetro `tamanhoCamiseta` inválido na busca retorna 500, não 400**:
-  `GET /api/funcionarios?tamanhoCamiseta=XYZ` com um valor que não é um dos
-  enums válidos (`PP`, `P`, `M`, `G`, `GG`, `XG`) não é interceptado pela
-  conversão de parâmetro do Spring da forma esperada e cai no handler
-  genérico de exceção, retornando `500` em vez de `400`. Isso não é
-  alcançável pela interface web (o `<select>` do frontend só oferece os
-  valores válidos), mas um cliente de API direto pode disparar esse caso.
-- **Paginação simples**: usa `Pageable` padrão do Spring Data
-  (`@PageableDefault(size = 50)`), sem contagem total exposta de forma
-  destacada na interface nem controles de paginação ricos (apenas
-  avançar/voltar) no frontend.
+  antes que qualquer uma tenha salvo. Isso ainda não é impedido a nível de
+  aplicação, mas não é mais um erro genérico de 500: a constraint `UNIQUE`
+  do banco é o último degrau de defesa, e o `GlobalExceptionHandler`
+  traduz a violação de integridade (`DataIntegrityViolationException`)
+  para um `409` com a mensagem genérica "CPF ou e-mail já cadastrado" —
+  sem expor o detalhe bruto do Postgres (que pode conter o CPF). A janela
+  de corrida em si (ambas as requisições passarem pela checagem antes de
+  qualquer salvar) continua existindo, mas o cliente sempre recebe um `409`
+  limpo em vez de um `500`.
+- **Paginação simples**: usa `Pageable` do Spring Data com um valor padrão
+  explícito (`@PageableDefault(size = 50, sort = "nome")`, ordenação
+  estável por nome quando `sort` não é informado). O frontend exibe um
+  aviso "mostrando X de Y" e controles mínimos de avançar/voltar página
+  (sem seletor de página nem salto direto para uma página arbitrária).
 - **Sem autenticação/autorização**: qualquer pessoa com acesso à rede onde
   a API está exposta pode ler, criar, editar e excluir qualquer
   funcionário. Adequado para o escopo deste desafio (ambiente interno/

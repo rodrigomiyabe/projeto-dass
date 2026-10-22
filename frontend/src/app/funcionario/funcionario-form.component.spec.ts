@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { FuncionarioFormComponent } from './funcionario-form.component';
 import { FuncionarioService } from './funcionario.service';
 import { Funcionario } from './funcionario.model';
@@ -35,6 +35,22 @@ describe('FuncionarioFormComponent', () => {
     expect(component.form.controls['cpf'].valid).toBe(false);
   });
 
+  it('marca nome em branco ou muito curto como inválido', () => {
+    component.form.controls['nome'].setValue('   ');
+    expect(component.form.controls['nome'].valid).toBe(false);
+    component.form.controls['nome'].setValue('A');
+    expect(component.form.controls['nome'].valid).toBe(false);
+    component.form.controls['nome'].setValue('Ana');
+    expect(component.form.controls['nome'].valid).toBe(true);
+  });
+
+  it('marca email em branco ou maior que 150 caracteres como inválido', () => {
+    component.form.controls['email'].setValue('   ');
+    expect(component.form.controls['email'].valid).toBe(false);
+    component.form.controls['email'].setValue(`${'a'.repeat(145)}@ex.com`);
+    expect(component.form.controls['email'].valid).toBe(false);
+  });
+
   it('marca calçado fora da faixa 34-48 como inválido', () => {
     component.form.controls['tamanhoCalcado'].setValue(33);
     expect(component.form.controls['tamanhoCalcado'].valid).toBe(false);
@@ -57,6 +73,57 @@ describe('FuncionarioFormComponent', () => {
     expect(feedback.sucesso).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/']);
     expect(emitSpy).toHaveBeenCalled();
+  });
+
+  it('ao falhar com 409, exibe a mensagem do backend e não navega', () => {
+    service.criar.mockReturnValue(
+      throwError(() => ({
+        error: {
+          timestamp: '2026-10-21T10:00:00-03:00',
+          status: 409,
+          error: 'Conflict',
+          message: 'Já existe um funcionário cadastrado com o CPF informado',
+          path: '/api/funcionarios',
+          fieldErrors: [],
+        },
+      })),
+    );
+    component.form.setValue({
+      cpf: '123.456.789-09',
+      nome: 'Ana Silva',
+      email: 'ana@example.com',
+      tamanhoCamiseta: 'M',
+      tamanhoCalcado: 38,
+    });
+    component.salvar();
+    expect(component.erro()).toBe('Já existe um funcionário cadastrado com o CPF informado');
+    expect(feedback.erro).toHaveBeenCalledWith('Já existe um funcionário cadastrado com o CPF informado');
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('ao falhar com 400 e fieldErrors, exibe a mensagem combinando os erros de campo', () => {
+    service.criar.mockReturnValue(
+      throwError(() => ({
+        error: {
+          timestamp: '2026-10-21T10:00:00-03:00',
+          status: 400,
+          error: 'Bad Request',
+          message: 'Dados inválidos',
+          path: '/api/funcionarios',
+          fieldErrors: [{ campo: 'cpf', mensagem: 'CPF inválido' }],
+        },
+      })),
+    );
+    component.form.setValue({
+      cpf: '123.456.789-09',
+      nome: 'Ana Silva',
+      email: 'ana@example.com',
+      tamanhoCamiseta: 'M',
+      tamanhoCalcado: 38,
+    });
+    component.salvar();
+    expect(component.erro()).toContain('cpf: CPF inválido');
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
   it('cancelar navega para / e emite cancelado sem chamar o serviço', () => {
