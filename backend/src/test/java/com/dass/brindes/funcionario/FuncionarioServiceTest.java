@@ -72,6 +72,29 @@ class FuncionarioServiceTest {
 	}
 
 	@Test
+	void atualizarComCpfColidindoComOutroRegistroLancaExcecao() {
+		var existente = new Funcionario(1L, "12345678909", "Ana Silva", "ana@example.com", TamanhoCamiseta.M, 38, null,
+				null);
+		when(repository.findById(1L)).thenReturn(Optional.of(existente));
+		when(repository.existsByCpfAndIdNot("98765432100", 1L)).thenReturn(true);
+
+		var req = new FuncionarioRequest("98765432100", "Ana Silva", "ana@example.com", TamanhoCamiseta.M, 38);
+		assertThatThrownBy(() -> service.atualizar(1L, req)).isInstanceOf(RecursoDuplicadoException.class);
+	}
+
+	@Test
+	void atualizarComEmailColidindoComOutroRegistroLancaExcecao() {
+		var existente = new Funcionario(1L, "12345678909", "Ana Silva", "ana@example.com", TamanhoCamiseta.M, 38, null,
+				null);
+		when(repository.findById(1L)).thenReturn(Optional.of(existente));
+		when(repository.existsByCpfAndIdNot("12345678909", 1L)).thenReturn(false);
+		when(repository.existsByEmailAndIdNot("bia@example.com", 1L)).thenReturn(true);
+
+		var req = new FuncionarioRequest("12345678909", "Ana Silva", "bia@example.com", TamanhoCamiseta.M, 38);
+		assertThatThrownBy(() -> service.atualizar(1L, req)).isInstanceOf(RecursoDuplicadoException.class);
+	}
+
+	@Test
 	void buscarPorIdInexistenteLancaExcecao() {
 		when(repository.findById(99L)).thenReturn(Optional.empty());
 		assertThatThrownBy(() -> service.buscarPorId(99L)).isInstanceOf(RecursoNaoEncontradoException.class);

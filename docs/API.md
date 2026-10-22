@@ -148,33 +148,26 @@ GET /api/funcionarios?nome=ana&tamanhoCamiseta=M&page=0&size=20
       "updatedAt": "2026-10-21T10:00:00-03:00"
     }
   ],
-  "page": {
-    "size": 20,
-    "number": 0,
-    "totalElements": 1,
-    "totalPages": 1
-  }
+  "totalElements": 1,
+  "totalPages": 1,
+  "number": 0,
+  "size": 20
 }
 ```
 
-**Erro — `500 Internal Server Error`** (limitação conhecida — ver
-`README.md` "Limitações conhecidas"): um valor de `tamanhoCamiseta` que não
-corresponde a nenhum dos enums válidos (ex.: `?tamanhoCamiseta=XYZ`) não é
-tratado como erro de validação; cai no handler genérico e retorna 500:
+Os campos de paginação (`totalElements`, `totalPages`, `number`, `size`)
+vêm no nível raiz da resposta, junto com `content` — não aninhados em um
+objeto `page` (esse é o modo de serialização padrão do Spring Boot
+4.1.1 para `Page`, `spring.data.web.pageable.serialization-mode=direct`).
+Sem `sort` explícito, o resultado vem ordenado por `nome` ascendente
+(`@PageableDefault(size = 50, sort = "nome")` no controller).
 
-```json
-{
-  "timestamp": "2026-10-21T10:00:00-03:00",
-  "status": 500,
-  "error": "Internal Server Error",
-  "message": "Erro interno. Tente novamente mais tarde.",
-  "path": "/api/funcionarios",
-  "fieldErrors": []
-}
-```
-
-Esse caso não é alcançável pela interface web, cujo `<select>` só oferece
-os valores válidos.
+**Erro — `400 Bad Request`**: um valor de `tamanhoCamiseta` que não
+corresponde a nenhum dos enums válidos (ex.: `?tamanhoCamiseta=XYZ`), ou um
+`tamanhoCalcado` que não é um número inteiro (ex.: `?tamanhoCalcado=40.5`),
+falha na conversão do parâmetro e é tratado como `400`, no mesmo formato de
+`ApiError` acima (sem `fieldErrors`, já que não é um erro de bean
+validation).
 
 ### `GET /api/funcionarios/{id}` — buscar por id
 
@@ -246,7 +239,9 @@ DELETE /api/funcionarios/1
 | `200`  | `GET`/`PUT` bem-sucedidos                                              |
 | `201`  | `POST` bem-sucedido (cadastro criado)                                  |
 | `204`  | `DELETE` bem-sucedido                                                  |
-| `400`  | corpo de requisição inválido (`fieldErrors` populado)                  |
-| `404`  | id informado não corresponde a nenhum funcionário cadastrado           |
-| `409`  | CPF ou e-mail já cadastrado em outro registro                          |
-| `500`  | erro interno não tratado — nunca expõe detalhes internos; inclui o caso conhecido de `tamanhoCamiseta` inválido na busca (ver acima) |
+| `400`  | corpo de requisição inválido (`fieldErrors` populado quando é erro de bean validation), corpo malformado (JSON inválido/enum inexistente), ou parâmetro de busca com tipo incompatível (ex.: `tamanhoCalcado=40.5`) |
+| `404`  | id informado não corresponde a nenhum funcionário cadastrado, ou a rota solicitada não existe |
+| `405`  | método HTTP não suportado pela rota                                    |
+| `409`  | CPF ou e-mail já cadastrado em outro registro (checagem a nível de aplicação, ou a constraint `UNIQUE` do banco sob uma corrida de requisições concorrentes — ver "Limitações conhecidas" no `README.md`) |
+| `415`  | `Content-Type` não suportado pela rota                                 |
+| `500`  | erro interno não tratado — nunca expõe detalhes internos                |

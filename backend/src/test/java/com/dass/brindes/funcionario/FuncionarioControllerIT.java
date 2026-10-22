@@ -115,7 +115,11 @@ class FuncionarioControllerIT extends PostgresIntegrationTest {
 		mockMvc.perform(get("/api/funcionarios").param("nome", "Ana").param("tamanhoCamiseta", "M"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content", hasSize(1)))
-			.andExpect(jsonPath("$.content[0].nome").value("Ana Silva"));
+			.andExpect(jsonPath("$.content[0].nome").value("Ana Silva"))
+			.andExpect(jsonPath("$.totalElements").value(1))
+			.andExpect(jsonPath("$.totalPages").value(1))
+			.andExpect(jsonPath("$.number").value(0))
+			.andExpect(jsonPath("$.size").value(50));
 	}
 
 	@Test void pesquisaPorCpfFuncionaComOuSemPontuacao() throws Exception {
@@ -132,5 +136,64 @@ class FuncionarioControllerIT extends PostgresIntegrationTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content", hasSize(1)))
 			.andExpect(jsonPath("$.content[0].cpf").value("12345678909"));
+	}
+
+	@Test void pesquisaOrdenaPorNomeAscendentePorPadrao() throws Exception {
+		var bia = new FuncionarioRequest("98765432100", "Bia Souza", "bia@example.com", TamanhoCamiseta.G, 40);
+		var ana = new FuncionarioRequest("12345678909", "Ana Silva", "ana@example.com", TamanhoCamiseta.M, 38);
+		mockMvc.perform(post("/api/funcionarios").contentType(APPLICATION_JSON).content(objectMapper.writeValueAsString(bia)))
+			.andExpect(status().isCreated());
+		mockMvc.perform(post("/api/funcionarios").contentType(APPLICATION_JSON).content(objectMapper.writeValueAsString(ana)))
+			.andExpect(status().isCreated());
+
+		mockMvc.perform(get("/api/funcionarios"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content[0].nome").value("Ana Silva"))
+			.andExpect(jsonPath("$.content[1].nome").value("Bia Souza"));
+	}
+
+	@Test void corpoMalformadoRetorna400EmVezDe500() throws Exception {
+		mockMvc.perform(post("/api/funcionarios").contentType(APPLICATION_JSON).content("{ isso não é json"))
+			.andExpect(status().isBadRequest());
+	}
+
+	@Test void enumInvalidoNoCorpoRetorna400EmVezDe500() throws Exception {
+		String corpo = "{\"cpf\":\"12345678909\",\"nome\":\"Ana Silva\",\"email\":\"ana@example.com\","
+				+ "\"tamanhoCamiseta\":\"TAMANHO_INEXISTENTE\",\"tamanhoCalcado\":38}";
+		mockMvc.perform(post("/api/funcionarios").contentType(APPLICATION_JSON).content(corpo))
+			.andExpect(status().isBadRequest());
+	}
+
+	@Test void idNaoNumericoRetorna400EmVezDe500() throws Exception {
+		mockMvc.perform(get("/api/funcionarios/abc")).andExpect(status().isBadRequest());
+	}
+
+	@Test void rotaDesconhecidaRetorna404() throws Exception {
+		mockMvc.perform(get("/api/rota-que-nao-existe")).andExpect(status().isNotFound());
+	}
+
+	@Test void atualizarComCpfDeOutroRegistroRetorna409() throws Exception {
+		var a = new FuncionarioRequest("12345678909", "Ana Silva", "ana@example.com", TamanhoCamiseta.M, 38);
+		var b = new FuncionarioRequest("98765432100", "Bia Souza", "bia@example.com", TamanhoCamiseta.G, 40);
+		var resultadoA = mockMvc.perform(post("/api/funcionarios").contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(a)))
+			.andExpect(status().isCreated())
+			.andReturn();
+		var resultadoB = mockMvc.perform(post("/api/funcionarios").contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(b)))
+			.andExpect(status().isCreated())
+			.andReturn();
+		long idA = objectMapper.readTree(resultadoA.getResponse().getContentAsString()).get("id").asLong();
+		long idB = objectMapper.readTree(resultadoB.getResponse().getContentAsString()).get("id").asLong();
+
+		var colisao = new FuncionarioRequest("12345678909", "Bia Souza", "bia@example.com", TamanhoCamiseta.G, 40);
+		mockMvc.perform(put("/api/funcionarios/" + idB).contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(colisao)))
+			.andExpect(status().isConflict());
+
+		var colisaoEmail = new FuncionarioRequest("98765432100", "Ana Silva", "ana@example.com", TamanhoCamiseta.G, 40);
+		mockMvc.perform(put("/api/funcionarios/" + idA).contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(colisaoEmail)))
+			.andExpect(status().isConflict());
 	}
 }

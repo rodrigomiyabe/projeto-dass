@@ -44,7 +44,7 @@ public class FuncionarioController {
 			@RequestParam(required = false) String email,
 			@RequestParam(required = false) TamanhoCamiseta tamanhoCamiseta,
 			@RequestParam(required = false) Integer tamanhoCalcado,
-			@PageableDefault(size = 50) Pageable pageable) {
+			@PageableDefault(size = 50, sort = "nome") Pageable pageable) {
 		Page<FuncionarioResponse> resultado = service.pesquisar(cpf, nome, email, tamanhoCamiseta, tamanhoCalcado,
 				pageable);
 		return ResponseEntity.ok(resultado);
