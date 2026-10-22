@@ -66,8 +66,9 @@
     </div>
 
     <div class="funcionario-form__campo">
-      <label for="tamanhoCalcado">Tamanho do calçado (numeração BR)</label>
+      <label for="tamanhoCalcado">Tamanho do calçado</label>
       <input id="tamanhoCalcado" type="number" formControlName="tamanhoCalcado" min="34" max="48" />
+      <small class="funcionario-form__dica">Numeração BR (34 a 48)</small>
       @if (form.controls['tamanhoCalcado'].invalid && form.controls['tamanhoCalcado'].touched) {
         <small class="funcionario-form__erro">
           @if (form.controls['tamanhoCalcado'].errors?.['required']) {

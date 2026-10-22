@@ -2,26 +2,40 @@
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
+  width: 100%;
   max-width: 560px;
+  margin: 0 auto;
   padding: 1.5rem;
 
   &__titulo {
     font-size: 1.25rem;
+    text-align: center;
   }
 
   &__grade {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    align-items: start;
+    gap: 1rem 1.25rem;
   }
 
   &__campo {
     display: flex;
     flex-direction: column;
 
+    label {
+      min-height: 1.1rem;
+    }
+
     &--larga {
       grid-column: 1 / -1;
     }
+  }
+
+  &__dica {
+    margin-top: 0.3rem;
+    font-size: 0.76rem;
+    color: var(--color-text-muted);
   }
 
   &__erro {
