@@ -200,3 +200,110 @@ Running 1 test using 1 worker
 | Frontend — unitário | `cd frontend && npm test -- --watch=false` | 7 suítes / 27 testes, 0 falhas |
 | Frontend — build de produção | `cd frontend && npm run build` | build concluído sem erros |
 | E2E (opcional/best-effort) | `cd e2e && npx playwright test` | `1 passed` (Task 14; não re-executado na Task 15) |
+
+## Verificação final do zero (Task 16)
+
+Esta seção documenta a execução final, "do zero", pedida pela Task 16:
+ambiente completamente resetado (`docker compose down -v` descartando o
+volume `postgres_data`, seguido de `docker compose up -d`) e as quatro
+suítes rodadas de novo, incluindo o E2E (que a Task 15 não havia
+re-executado).
+
+### Passo 1 — Reset do ambiente
+
+```
+docker compose down -v
+docker compose up -d
+```
+
+Resultado: volume `gerenciador-presente-dass_postgres_data` removido e
+recriado do zero; container `gerenciador-presente-dass-postgres-1`
+criado e iniciado. Healthcheck consultado via
+`docker inspect --format='{{.State.Health.Status}}'`: `starting` na
+1ª tentativa, `healthy` na 2ª (poll a cada 2s).
+
+### Passo 2 — Backend (`cd backend && ./mvnw clean verify`)
+
+Mesmo resultado da Task 15, confirmando que as migrations Flyway
+reaplicam limpas a partir de um schema vazio (log mostra
+`Current version of schema "public": << Empty Schema >>` seguido de
+`Successfully applied 1 migration ... now at version v1`, tanto no
+container Testcontainers do `FuncionarioControllerIT` quanto no do
+`FuncionarioRepositoryIT`):
+
+```
+[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0   (Surefire — unitários)
+...
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0   (Failsafe — integração, *IT)
+...
+[INFO] BUILD SUCCESS
+[INFO] Total time:  43.034 s
+```
+
+**Resultado: `BUILD SUCCESS` — 19 testes unitários + 14 de integração =
+33 testes, 0 falhas.** Idêntico à Task 15.
+
+### Passo 3 — Frontend (`cd frontend && npm test -- --watch=false && npm run build`)
+
+```
+Test Suites: 7 passed, 7 total
+Tests:       27 passed, 27 total
+Snapshots:   0 total
+Time:        5.425 s
+```
+
+```
+Initial chunk files | Names         |  Raw size | Estimated transfer size
+main-4KHIOES4.js    | main          | 301.64 kB |                78.31 kB
+styles-5INURTSO.css | styles        |   0 bytes |                 0 bytes
+Application bundle generation complete. [2.782 seconds]
+Output location: C:\particular\gerenciador-presente-dass\frontend\dist\frontend
+```
+
+**Resultado: 7 suítes / 27 testes, 0 falhas; build de produção concluído
+sem erros.** Idêntico à Task 15 (mesmos nomes de chunk/hash, já que
+nada no código do frontend mudou desde então).
+
+### Passo 4 — E2E (`cd e2e && npx playwright test`) — re-executado nesta task
+
+Diferente da Task 15 (que apenas citou o resultado da Task 14 sem
+re-rodar), esta task **re-executou** o E2E do zero, já que o Postgres
+recém-resetado do Passo 1 estava disponível:
+
+```
+cd backend && ./mvnw -q spring-boot:run     (background, env vars POSTGRES_* exportadas)
+cd frontend && npm start                    (background)
+curl http://localhost:8080/api/funcionarios → 200
+curl http://localhost:4200/                  → 200
+cd e2e && npx playwright test
+```
+
+```
+Running 1 test using 1 worker
+  ok 1 [chromium] › funcionario.spec.ts:8:5 › cadastrar, pesquisar, editar e excluir um funcionário (1.9s)
+1 passed (2.6s)
+```
+
+**Resultado: `1 passed`.** Backend e frontend derrubados em seguida
+(`taskkill` nos PIDs ouvindo 8080/4200, confirmado sem listeners
+restantes).
+
+### Passo 5 — Revisão da árvore de trabalho
+
+`git status` ao final: `nothing to commit, working tree clean`.
+`git ls-files` não lista nenhum `.env`, `node_modules/`, `target/`,
+`dist/` ou `*.log`/`*.zip` rastreado — confirmando que o `.gitignore`
+cumpre o papel de manter artefatos de build e segredos fora de
+qualquer commit futuro. Dois arquivos de log temporários criados
+durante esta verificação (`backend/backend-e2e.log`,
+`frontend/frontend-e2e.log`) ficaram corretamente fora do `git status`
+graças à regra `*.log` do `.gitignore`, e foram removidos manualmente
+após o uso.
+
+### Resumo da Task 16
+
+Todos os quatro comandos foram re-executados do zero (ambiente Docker
+limpo) e deram o mesmo resultado positivo da Task 15 — com a diferença
+de que, nesta task, o E2E também foi re-executado (não apenas citado),
+confirmando `1 passed` com backend/frontend subidos na hora.
+**Nenhuma falha, flakiness ou diferença de comportamento observada.**
