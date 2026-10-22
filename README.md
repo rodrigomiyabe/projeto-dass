@@ -55,8 +55,7 @@ técnicos em `docs/ARQUITETURA.md`.
 
 Há dois jeitos de rodar o projeto — escolha um:
 
-- **Opção A — só Docker** (recomendado para quem só quer ver a aplicação
-  rodando, sem instalar Java ou Node): precisa apenas de **Docker** `29.8.1`+
+- **Opção A — só Docker** (recomendado): sem instalar Java ou Node, precisa apenas de **Docker** `29.8.1`+
   com **Docker Compose** `v5.5.1`+ (`docker compose`, não o `docker-compose`
   legado).
 - **Opção B — desenvolvimento local** (recomendado para alterar o código,
