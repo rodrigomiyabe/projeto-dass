@@ -74,19 +74,42 @@ Detalhes da stack:
 
 ## Pré-requisitos
 
-Versões confirmadas no ambiente de desenvolvimento usado para construir e
-validar este projeto:
+Há dois jeitos de rodar o projeto — escolha um:
 
-- **Java**: JDK 21 ou superior (o ambiente de desenvolvimento usado tinha o
-  JDK 25.0.4 instalado; o projeto compila com `--release 21`, então qualquer
-  JDK 21+ funciona).
-- **Node.js**: `v24.15.0` (com `npm 11.12.1`).
-- **Docker**: `29.8.1`, com **Docker Compose** `v5.5.1` (`docker compose`,
-  não o `docker-compose` legado).
-- Não é necessário instalar Maven nem a Angular CLI globalmente — ambos são
-  usados via wrapper/`npx`, como descrito acima.
+- **Opção A — só Docker** (recomendado para quem só quer ver a aplicação
+  rodando, sem instalar Java ou Node): precisa apenas de **Docker** `29.8.1`+
+  com **Docker Compose** `v5.5.1`+ (`docker compose`, não o `docker-compose`
+  legado).
+- **Opção B — desenvolvimento local** (recomendado para alterar o código,
+  com hot-reload): precisa de **JDK 21+** (ambiente usado para construir o
+  projeto tinha o JDK 25.0.4; o projeto compila com `--release 21`, então
+  qualquer JDK 21+ funciona), **Node.js** `v24.15.0`+ (com `npm 11.12.1`+) e
+  **Docker** (só para o PostgreSQL). Não é necessário instalar Maven nem a
+  Angular CLI globalmente — ambos são usados via wrapper/`npx`.
 
-## Passo a passo de configuração
+## Opção A — tudo via Docker (um único comando)
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+Isso builda e sobe **três** containers: PostgreSQL (`postgres:16-alpine`),
+o backend (`backend/Dockerfile`, build multi-stage com Maven + JRE 21) e o
+frontend (`frontend/Dockerfile`, build multi-stage com Node + nginx servindo
+os arquivos estáticos, com fallback de rota para o Angular Router). As
+migrations do Flyway rodam automaticamente quando o backend sobe.
+
+- Frontend: <http://localhost:4200>
+- API: <http://localhost:8080/api/funcionarios>
+
+Para ver os logs: `docker compose logs -f backend` (troque `backend` por
+`frontend` ou `postgres`). Para parar tudo: `docker compose down` (ou
+`docker compose down -v` para também apagar os dados do banco). Depois de
+alterar código-fonte, suba de novo com `docker compose up -d --build` para
+reconstruir as imagens.
+
+## Opção B — desenvolvimento local (hot-reload)
 
 ### 1. Variáveis de ambiente
 
@@ -100,8 +123,11 @@ no `.gitignore`.
 
 ### 2. Subir o PostgreSQL
 
+O `docker-compose.yml` também define os serviços `backend`/`frontend` (usados
+pela Opção A) — para rodar só o banco aqui na Opção B, especifique o serviço:
+
 ```bash
-docker compose up -d
+docker compose up -d postgres
 ```
 
 Isso cria o container `postgres:16-alpine` com o banco/usuário/senha
@@ -205,7 +231,7 @@ Para rodar (todos os três serviços precisam estar de pé):
 
 ```bash
 # 1. Banco
-docker compose up -d
+docker compose up -d postgres
 
 # 2. Backend (em um terminal, com as variáveis de ambiente exportadas)
 cd backend
@@ -250,15 +276,19 @@ Gera os arquivos estáticos otimizados em `frontend/dist/frontend/`.
 
 ## Troubleshooting
 
+- **Rodou a Opção A e agora quer tentar a Opção B (ou vice-versa)**: pare os
+  containers primeiro (`docker compose down`) — os serviços `backend`/
+  `frontend` do Docker usam as mesmas portas (8080/4200) que os processos
+  locais, então rodar os dois ao mesmo tempo dá conflito de porta.
 - **Porta 5432 já em uso** (outro Postgres local rodando): mude
   `POSTGRES_PORT` no `.env` para outra porta (ex.: `5433`) antes de
-  `docker compose up -d`, e ajuste `POSTGRES_HOST`/porta usados pelo backend
-  na mesma proporção.
+  `docker compose up -d postgres`, e ajuste `POSTGRES_HOST`/porta usados
+  pelo backend na mesma proporção.
 - **Porta 8080 já em uso**: pare o processo que a está usando, ou mude
-  `server.port` em `backend/src/main/resources/application.yml`.
-- **Porta 4200 já em uso**: `npm start -- --port 4300` (ou outra porta
-  livre), e atualize `environment.ts` se necessário para apontar para a API
-  correta.
+  `server.port` em `backend/src/main/resources/application.yml` (e a porta
+  publicada do serviço `backend` no `docker-compose.yml`, se usar a Opção A).
+- **Porta 4200 já em uso**: `npm start -- --port 4300` (Opção B) ou troque
+  a porta publicada do serviço `frontend` no `docker-compose.yml` (Opção A).
 - **Docker não está rodando / "Cannot connect to the Docker daemon"**:
   abra o Docker Desktop (ou inicie o serviço Docker) antes de
   `docker compose up -d` e antes de `./mvnw clean verify` (os testes de
@@ -270,7 +300,8 @@ Gera os arquivos estáticos otimizados em `frontend/dist/frontend/`.
   failed"): normalmente indica que o esquema do banco está dessincronizado
   das migrations — em ambiente de desenvolvimento, a solução mais simples é
   derrubar o volume (`docker compose down -v`) e subir de novo
-  (`docker compose up -d`), perdendo os dados locais.
+  (`docker compose up -d postgres`, ou `up -d --build` na Opção A), perdendo
+  os dados locais.
 - **Frontend não encontra a API (erros de CORS ou "Failed to fetch")**:
   confirme que o backend está rodando em `localhost:8080` e que o frontend
   está em `localhost:4200` — o backend só libera CORS para essa origem
@@ -303,20 +334,26 @@ Gera os arquivos estáticos otimizados em `frontend/dist/frontend/`.
   de autenticação adicional.
 - **Nenhum deploy em nuvem foi realizado**: não há link de demonstração
   publicamente acessível. O PDF do desafio marca o deploy em nuvem como
-  opcional; a aplicação foi validada apenas localmente (Docker Compose +
-  `./mvnw spring-boot:run` + `npm start`).
+  opcional; a aplicação foi validada localmente tanto via Docker Compose
+  completo (Opção A) quanto via `./mvnw spring-boot:run` + `npm start`
+  (Opção B).
 
 ## Estrutura do repositório
 
 ```
 .
-├── backend/     # API REST em Java/Spring Boot (Maven Wrapper)
-├── frontend/    # SPA em Angular (standalone, zoneless, Jest)
+├── backend/
+│   ├── Dockerfile    # Build multi-stage (Maven+JDK21 → JRE21), usado na Opção A
+│   └── ...            # API REST em Java/Spring Boot (Maven Wrapper)
+├── frontend/
+│   ├── Dockerfile    # Build multi-stage (Node → nginx), usado na Opção A
+│   ├── nginx.conf     # Fallback de rota para o Angular Router (SPA)
+│   └── ...             # SPA em Angular (standalone, zoneless, Jest)
 ├── e2e/         # Teste end-to-end com Playwright (opcional/best-effort)
 ├── docs/
 │   ├── ARQUITETURA.md       # Visão arquitetural do sistema
 │   ├── API.md               # Contrato da API REST
 │   └── PLANO-DE-TESTES.md   # Classes de teste e resultados reais de execução
-├── docker-compose.yml   # PostgreSQL para desenvolvimento local
+├── docker-compose.yml   # Postgres (+ backend/frontend containerizados na Opção A)
 └── .env.example         # Modelo de variáveis de ambiente (sem segredos reais)
 ```
