@@ -116,6 +116,26 @@ describe('FuncionarioListComponent', () => {
     expect(service.listar).not.toHaveBeenCalled();
   });
 
+  it('limpar um campo de filtro pesquisa de novo automaticamente e traz todos os registros', () => {
+    jest.useFakeTimers();
+    service.listar.mockReturnValue(of(pagina([])));
+    fixture.detectChanges();
+
+    component.filtro.controls['nome'].setValue('zzz_nao_existe');
+    jest.advanceTimersByTime(300);
+    expect(service.listar).toHaveBeenLastCalledWith(expect.objectContaining({ nome: 'zzz_nao_existe' }), 0);
+
+    service.listar.mockReturnValue(
+      of(pagina([{ id: 1, cpf: '12345678909', nome: 'Ana', email: 'ana@example.com', tamanhoCamiseta: 'M', tamanhoCalcado: 38 }])),
+    );
+    component.filtro.controls['nome'].setValue('');
+    jest.advanceTimersByTime(300);
+
+    expect(service.listar).toHaveBeenLastCalledWith(expect.objectContaining({ nome: undefined }), 0);
+    expect(component.funcionarios().length).toBe(1);
+    jest.useRealTimers();
+  });
+
   it('novo navega para /novo e editar navega para /editar/:id', () => {
     service.listar.mockReturnValue(
       of(pagina([{ id: 7, cpf: '12345678909', nome: 'Ana', email: 'ana@example.com', tamanhoCamiseta: 'M', tamanhoCalcado: 38 }])),

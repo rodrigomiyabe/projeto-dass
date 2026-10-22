@@ -1,6 +1,17 @@
-import { Component, EventEmitter, OnInit, Output, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  OnInit,
+  Output,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { FeedbackService } from '../shared/feedback.service';
 import { Funcionario, FuncionarioFiltro, TamanhoCamiseta } from './funcionario.model';
 import { FuncionarioService } from './funcionario.service';
@@ -22,6 +33,7 @@ export class FuncionarioListComponent implements OnInit {
   private readonly service = inject(FuncionarioService);
   private readonly feedbackService = inject(FeedbackService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly tamanhosCamiseta = TAMANHOS_CAMISETA_FILTRO;
 
@@ -50,6 +62,18 @@ export class FuncionarioListComponent implements OnInit {
 
   ngOnInit(): void {
     this.pesquisar();
+
+    // Pesquisa reativa: qualquer alteração nos filtros (inclusive limpar um
+    // campo) já atualiza a lista sozinha, sem precisar clicar em "Pesquisar"
+    // de novo. O botão continua funcionando (Enter / clique) para quem
+    // prefere disparar a busca explicitamente.
+    this.filtro.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged((anterior, atual) => JSON.stringify(anterior) === JSON.stringify(atual)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.pesquisar());
   }
 
   pesquisar(pagina = 0): void {
