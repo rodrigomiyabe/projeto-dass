@@ -1,5 +1,6 @@
 package com.dass.brindes.validation;
 
+import com.dass.brindes.utils.validation.CpfUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

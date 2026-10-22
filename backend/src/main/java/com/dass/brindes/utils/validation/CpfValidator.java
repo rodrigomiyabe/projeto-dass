@@ -1,4 +1,4 @@
-package com.dass.brindes.validation;
+package com.dass.brindes.utils.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

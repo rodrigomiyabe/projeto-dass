@@ -1,4 +1,4 @@
-package com.dass.brindes.funcionario;
+package com.dass.brindes.utils;
 
 public enum TamanhoCamiseta {
 	PP,

@@ -1,4 +1,4 @@
-package com.dass.brindes.web;
+package com.dass.brindes.resources.errors;
 
 /**
  * Thrown when a resource would violate a uniqueness constraint (e.g. duplicate CPF or email).

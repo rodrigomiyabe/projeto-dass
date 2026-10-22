@@ -1,6 +1,6 @@
 package com.dass.brindes.funcionario.dto;
 
-import com.dass.brindes.funcionario.TamanhoCamiseta;
+import com.dass.brindes.utils.TamanhoCamiseta;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.Test;

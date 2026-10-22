@@ -1,4 +1,4 @@
-package com.dass.brindes.web;
+package com.dass.brindes.resources.errors;
 
 import java.time.OffsetDateTime;
 import java.util.List;

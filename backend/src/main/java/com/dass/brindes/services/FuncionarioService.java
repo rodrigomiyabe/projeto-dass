@@ -1,10 +1,14 @@
-package com.dass.brindes.funcionario;
+package com.dass.brindes.services;
 
+import com.dass.brindes.entities.Funcionario;
+import com.dass.brindes.funcionario.FuncionarioSpecifications;
+import com.dass.brindes.utils.TamanhoCamiseta;
 import com.dass.brindes.funcionario.dto.FuncionarioRequest;
 import com.dass.brindes.funcionario.dto.FuncionarioResponse;
-import com.dass.brindes.validation.CpfUtils;
-import com.dass.brindes.web.RecursoDuplicadoException;
-import com.dass.brindes.web.RecursoNaoEncontradoException;
+import com.dass.brindes.repositories.FuncionarioRepository;
+import com.dass.brindes.utils.validation.CpfUtils;
+import com.dass.brindes.resources.errors.RecursoDuplicadoException;
+import com.dass.brindes.resources.errors.RecursoNaoEncontradoException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -79,7 +83,7 @@ public class FuncionarioService {
 	}
 
 	public Page<FuncionarioResponse> pesquisar(String cpf, String nome, String email,
-			TamanhoCamiseta tamanhoCamiseta, Integer tamanhoCalcado, Pageable pageable) {
+											   TamanhoCamiseta tamanhoCamiseta, Integer tamanhoCalcado, Pageable pageable) {
 		String cpfNormalizado = CpfUtils.normalizar(cpf);
 		var specification = FuncionarioSpecifications.combinar(cpfNormalizado, nome, email, tamanhoCamiseta,
 				tamanhoCalcado);

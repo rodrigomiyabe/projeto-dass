@@ -2,7 +2,10 @@ package com.dass.brindes.funcionario;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.dass.brindes.entities.Funcionario;
+import com.dass.brindes.repositories.FuncionarioRepository;
 import com.dass.brindes.support.PostgresIntegrationTest;
+import com.dass.brindes.utils.TamanhoCamiseta;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 

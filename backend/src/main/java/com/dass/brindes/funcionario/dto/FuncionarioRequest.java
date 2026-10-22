@@ -1,7 +1,7 @@
 package com.dass.brindes.funcionario.dto;
 
-import com.dass.brindes.funcionario.TamanhoCamiseta;
-import com.dass.brindes.validation.Cpf;
+import com.dass.brindes.utils.TamanhoCamiseta;
+import com.dass.brindes.utils.validation.Cpf;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

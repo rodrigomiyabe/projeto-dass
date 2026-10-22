@@ -1,4 +1,4 @@
-package com.dass.brindes.web;
+package com.dass.brindes.resources.errors;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;

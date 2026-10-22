@@ -1,4 +1,4 @@
-package com.dass.brindes.validation;
+package com.dass.brindes.utils.validation;
 
 /**
  * Utility methods for normalizing and validating Brazilian CPF numbers.

@@ -7,9 +7,13 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.dass.brindes.entities.Funcionario;
 import com.dass.brindes.funcionario.dto.FuncionarioRequest;
-import com.dass.brindes.web.RecursoDuplicadoException;
-import com.dass.brindes.web.RecursoNaoEncontradoException;
+import com.dass.brindes.repositories.FuncionarioRepository;
+import com.dass.brindes.services.FuncionarioService;
+import com.dass.brindes.utils.TamanhoCamiseta;
+import com.dass.brindes.resources.errors.RecursoDuplicadoException;
+import com.dass.brindes.resources.errors.RecursoNaoEncontradoException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

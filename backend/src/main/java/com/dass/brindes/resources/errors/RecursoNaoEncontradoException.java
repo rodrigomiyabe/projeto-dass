@@ -1,4 +1,4 @@
-package com.dass.brindes.web;
+package com.dass.brindes.resources.errors;
 
 /**
  * Thrown when a requested resource cannot be found.

@@ -1,5 +1,6 @@
-package com.dass.brindes.funcionario;
+package com.dass.brindes.entities;
 
+import com.dass.brindes.utils.TamanhoCamiseta;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

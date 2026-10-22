@@ -1,5 +1,6 @@
-package com.dass.brindes.funcionario;
+package com.dass.brindes.repositories;
 
+import com.dass.brindes.entities.Funcionario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 

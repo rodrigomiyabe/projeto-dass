@@ -1,5 +1,7 @@
-package com.dass.brindes.funcionario;
+package com.dass.brindes.resources;
 
+import com.dass.brindes.services.FuncionarioService;
+import com.dass.brindes.utils.TamanhoCamiseta;
 import com.dass.brindes.funcionario.dto.FuncionarioRequest;
 import com.dass.brindes.funcionario.dto.FuncionarioResponse;
 import jakarta.validation.Valid;

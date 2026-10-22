@@ -2,11 +2,12 @@ package com.dass.brindes.funcionario;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.dass.brindes.entities.Funcionario;
+import com.dass.brindes.utils.TamanhoCamiseta;
 import org.springframework.data.jpa.domain.Specification;
 
-/**
- * Builders for optional, composable {@link Specification} filters over {@link Funcionario}.
- */
+
 public final class FuncionarioSpecifications {
 
 	private FuncionarioSpecifications() {

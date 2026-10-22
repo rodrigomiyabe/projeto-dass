@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.dass.brindes.funcionario.dto.FuncionarioRequest;
 import com.dass.brindes.support.PostgresIntegrationTest;
+import com.dass.brindes.utils.TamanhoCamiseta;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
