@@ -1,4 +1,6 @@
 .superpowers/
+docs/superpowers/
+PROMPT-CLAUDE-SUPERPOWERS-TESTE-WEB.md
 
 # Variáveis de ambiente locais (credenciais reais)
 .env
